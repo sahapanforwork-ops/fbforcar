@@ -33,3 +33,6 @@ Thumbs.db
 venv/
 .vscode/
 .idea/
+# บอทตอบแชต: แชตที่ตอบแล้ว / เพื่อนที่กดยืนยันแล้ว (มีชื่อคน)
+chat_history.txt
+friend_history.txt
