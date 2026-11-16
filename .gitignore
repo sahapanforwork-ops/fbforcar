@@ -1,0 +1,35 @@
+# ---- ห้ามขึ้น git: รหัสผ่าน / cookies / ข้อมูลล็อกอิน ----
+# ไฟล์บัญชี Facebook (มีรหัสผ่าน) และไฟล์ตารางที่ export มาทุกชนิด
+*.csv
+Facebookforcarental*
+# cookies เก่าของคนเขียนเดิม และไฟล์ข้อมูลล็อกอินทุกแบบ
+*.json
+*.dat
+cookies*
+*.cookie
+.env
+.env.*
+# ไฟล์รหัสใช้งานโปรแกรม (ผูกกับเครื่อง)
+code.text
+# สัญญาเช่าที่เซ็นแล้ว มีบัตรประชาชน ใบขับขี่ และเลขบัญชี
+*.pdf
+Contract-*
+
+# ---- ข้อมูลที่เกิดขึ้นตอนรัน (แต่ละเครื่องมีของตัวเอง) ----
+commented_history.txt
+*.log
+
+# ---- ไฟล์ที่ไม่ต้องใช้ ----
+# chromedriver ของ Mac (Selenium หา driver ให้เองแล้ว)
+assets/driver/
+chromedriver*
+__pycache__/
+*.py[cod]
+.DS_Store
+Thumbs.db
+# ไฟล์ล็อกตอนเปิด Excel ค้างไว้
+~$*
+.venv/
+venv/
+.vscode/
+.idea/

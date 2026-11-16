@@ -1,0 +1,8 @@
+# Ignore Python bytecode files
+*.pyc
+
+# Ignore compiled Python files in __pycache__
+__pycache__/
+
+# Ignore JSON files
+*.json
