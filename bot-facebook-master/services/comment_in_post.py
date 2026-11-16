@@ -31,7 +31,7 @@ def start_comment_in_post(driver):
                 EC.presence_of_element_located((By.XPATH, '//div[@role="textbox" and @contenteditable="true"]'))
             )
             comment_box.click()
-            if upload_image(driver, image, input_index=0):
+            if upload_image(driver, image, near=comment_box):
                 time.sleep(5)
             # ใช้ ActionChains เพื่อพิมพ์ข้อความและส่ง
             actions = ActionChains(driver)
