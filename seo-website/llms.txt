@@ -1,0 +1,30 @@
+# IMP CarRent
+
+> IMP CarRent ให้เช่ารถยนต์ไฟฟ้า BYD Dolphin Standard ปี 2025 ในกรุงเทพฯ และปริมณฑล เช่ารายวันวันละ 1,300 บาท หรือรายเดือนเดือนละ 24,000 บาท (สัญญาขั้นต่ำ 6 เดือน) รายเดือนเอาไปขับรับงาน Grab, LINE MAN และ Bolt ได้ จองทาง LINE @804bunik หรือโทร 096-219-4138
+
+IMP CarRent (IMP Car Rent, ไอเอ็มพี คาร์เร้นท์) is an electric-car rental service in Bangkok, Thailand. Every car is a BYD Dolphin Standard 2025 (100% EV). Daily rental is 1,300 THB/day. Monthly rental is 24,000 THB/month with a 6-month minimum contract, and monthly renters may drive for ride-hailing apps (Grab, LINE MAN, Bolt).
+
+## ข้อมูลหลัก
+
+- รถ: BYD Dolphin Standard ปี 2025 ไฟฟ้า 100% แบต BYD Blade 50.25 kWh วิ่งได้ 435 กม. ต่อการชาร์จ (NEDC) มอเตอร์ 70 kW ขับเคลื่อนล้อหน้า ท้ายรถ 345 ลิตร
+- สี: ขาว Frost White, เทา Graphite Grey, ครีม Coastal Cream (เลือกได้ตามรถที่ว่าง)
+- ราคา: รายวัน 1,300 บาท/วัน เช่าได้ตั้งแต่ 1 วัน / รายเดือน 24,000 บาท/เดือน สัญญาขั้นต่ำ 6 เดือน (ตกวันละประมาณ 800 บาท)
+- ขับแอป: รายเดือนรับงาน Grab, LINE MAN, Bolt ได้ คนขับต้องมีใบขับขี่สาธารณะ และรถต้องจดทะเบียน ร.ย.18 ตามเงื่อนไขกรมการขนส่งทางบก รายวันใช้รับงานแอปไม่ได้
+- ค่าใช้จ่ายที่ผู้เช่าจ่ายเอง: ค่าชาร์จไฟ ค่าทางด่วน ค่าที่จอด (รายเดือนรวมถึงค่าล้างรถ) ส่วนประกันภัย มัดจำ และเงื่อนไขอื่นระบุในใบเสนอราคาและสัญญา
+- การชาร์จ: AC สูงสุด 7 kW (Type 2) และ DC สูงสุด 60 kW (CCS2)
+- พื้นที่ให้บริการ: กรุงเทพมหานคร นนทบุรี ปทุมธานี สมุทรปราการ สมุทรสาคร นครปฐม
+- เวลาทำการ: ทุกวัน 08:00–20:00
+- ติดต่อ/จอง: LINE @804bunik (https://line.me/R/ti/p/@804bunik) โทร 096-219-4138 (+66 96 219 4138) หรือฟอร์มบนเว็บ
+- Facebook: https://www.facebook.com/impcarrent
+
+## หน้าเว็บ
+
+- [หน้าแรก: เช่ารถไฟฟ้า BYD Dolphin รายวัน รายเดือน](https://impcar.vercel.app/): ภาพรวมบริการ ราคา สี และวิธีจอง
+- [เช่ารถขับ Grab รายเดือน 24,000 บาท](https://impcar.vercel.app/grab-monthly/): เงื่อนไขขับแอป ใบขับขี่สาธารณะ ร.ย.18 ค่าคอมแต่ละแอป และรายได้โดยประมาณ
+- [เช่ารถไฟฟ้ารายวัน 1,300 บาท](https://impcar.vercel.app/rent-daily/): เช่าเที่ยว ทริปต่างจังหวัด การชาร์จระหว่างทาง และค่าไฟทริปยอดนิยม
+- [BYD Dolphin Standard 2025 สเปกและสี](https://impcar.vercel.app/byd-dolphin/): สเปก ระยะวิ่ง เวลาชาร์จ ค่าไฟต่อการชาร์จ และภาพทุกสี
+- [เครื่องคำนวณรายได้คนขับแอป](https://impcar.vercel.app/driver-income-calculator/): คำนวณรายได้สุทธิต่อเดือน ต่อวัน ต่อชั่วโมง เทียบรถน้ำมัน
+
+## Optional
+
+- [นโยบายความเป็นส่วนตัว](https://impcar.vercel.app/privacy/)

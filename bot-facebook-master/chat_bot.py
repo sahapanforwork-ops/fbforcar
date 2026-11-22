@@ -355,6 +355,17 @@ def make_driver():
     return driver
 
 
+def paused_until():
+    """ใช้ช่วงพักเดียวกับ autopilot: ถ้า Facebook เพิ่งเตือนบัญชีนี้ บอทแชตก็ไม่ทำงานด้วย"""
+    path = os.path.join(os.environ.get("LOCALAPPDATA", BASE_DIR), "bot-facebook-master", "autopilot", "paused_until.json")
+    try:
+        import json
+        until = datetime.fromisoformat(json.load(open(path, encoding="utf-8"))["until"])
+    except (OSError, ValueError, KeyError, TypeError):
+        return None
+    return until if until > datetime.now() else None
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description="บอทตอบแชตลูกค้าและกดยืนยันคำขอเป็นเพื่อน")
     ap.add_argument("--dry", action="store_true", help="ดูอย่างเดียว ไม่ส่งข้อความ ไม่กดยืนยัน")
@@ -367,6 +378,11 @@ def main(argv=None):
         log("แก้ข้อความใน chat_reply.xlsx ก่อน: " + " | ".join(problems))
         return 1
 
+    until = paused_until()
+    if until:
+        log(f"พักอยู่เพราะ Facebook เตือนบัญชีนี้ ถึง {until:%Y-%m-%d %H:%M} ยังไม่เปิดบอทแชต")
+        return 0
+
     driver = make_driver()
     try:
         if not login(driver):
@@ -374,6 +390,9 @@ def main(argv=None):
         log("เริ่มทำงาน" + (" (โหมดทดลอง ไม่ส่งจริง)" if args.dry else "") + " กด Ctrl+C เพื่อหยุด")
         next_friend_check = 0
         while True:
+            if paused_until():
+                log("Facebook เตือนบัญชีนี้ระหว่างทำงาน หยุดบอทแชตแล้ว")
+                break
             for job in (lambda: check_chats(driver, reply_text, args.dry),
                         lambda: check_friends(driver, args.dry) if time.time() >= next_friend_check else None):
                 try:

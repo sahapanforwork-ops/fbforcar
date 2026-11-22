@@ -34,7 +34,7 @@ sys.path.insert(0, PROGRAM_DIR)
 import pandas as pd  # type: ignore  # noqa: E402
 import services.login_facebook as lf  # noqa: E402
 from services.excel import _read_sheet, cell_text, pick_variant  # noqa: E402
-from services.post_in_group import post_to_group, POST_GAP_SECONDS  # noqa: E402
+from services.post_in_group import post_to_group  # noqa: E402
 from services.seeker_rules import judge, post_body  # noqa: E402
 from utils.commands.image import resolve_images, attach_images  # noqa: E402
 from utils.local_store import data_dir  # noqa: E402
@@ -46,17 +46,22 @@ JOINS_FILE = os.path.join(STATE_DIR, "joins.json")        # กลุ่มท�
 POSTED_FILE = os.path.join(STATE_DIR, "posted.json")      # กลุ่ม -> วันที่โพสต์ล่าสุด
 COMMENTS_FILE = os.path.join(STATE_DIR, "comments.json")  # คอมเมนต์ที่ทำไปแล้ว (กันคนเดิม/ข้อความเดิม)
 LOCK_FILE = os.path.join(STATE_DIR, "running.lock")
+ME_FILE = os.path.join(STATE_DIR, "me.json")              # ชื่อบัญชีเรา (กันคอมเมนต์โพสต์ตัวเอง)
+PAUSE_FILE = os.path.join(STATE_DIR, "paused_until.json")  # Facebook เตือนแล้ว: พักทุกงานถึงเวลานี้
+WARNING_PAUSE_HOURS = 72
 AUTO_HISTORY = os.path.join(os.path.dirname(PROGRAM_DIR), "bot-facebook-auto-comment", "commented_history.txt")
 HISTORY_FILE = AUTO_HISTORY if os.path.isdir(os.path.dirname(AUTO_HISTORY)) else os.path.join(STATE_DIR, "commented_history.txt")
 GROUPS_FOUND = os.path.join(PROGRAM_DIR, "groups_found.xlsx")
 
-JOIN_PER_DAY = 5
+# ลดลงหลัง Facebook จำกัดบัญชีข้อหาสแปมเมื่อ 19 พ.ย. 2569 (เดิม: เข้ากลุ่ม 5, โพสต์ 12, คอมเมนต์ 4/รอบ 15/วัน)
+JOIN_PER_DAY = 2
 RECHECK_PER_DAY = 5
-MAX_POSTS_PER_DAY = 12
-COMMENTS_PER_ROUND = 4
-COMMENTS_PER_DAY = 15
+MAX_POSTS_PER_DAY = 5
+COMMENTS_PER_ROUND = 3
+COMMENTS_PER_DAY = 8
 SAME_PERSON_DAYS = 3
-COMMENT_GAP_SECONDS = (90, 180)
+COMMENT_GAP_SECONDS = (180, 360)
+POST_ROUND_GAP_SECONDS = (240, 480)  # เว้นระหว่างโพสต์แต่ละกลุ่มให้ห่างกว่าเดิม
 JOIN_GAP_SECONDS = (25, 45)
 ANONYMOUS = "ผู้มีส่วนร่วมที่ไม่ระบุตัวตน"
 
@@ -87,6 +92,11 @@ for (const btn of document.querySelectorAll('[role="button"][aria-label^="แส
 }
 return out;
 """
+# ชื่อบัญชีเรา จากช่อง "แสดงความคิดเห็นในชื่อ ..." (ใช้กันไม่ให้คอมเมนต์โพสต์ของตัวเอง)
+MY_NAME_JS = r"""
+const box = document.querySelector('[aria-label^="แสดงความคิดเห็นในชื่อ"]');
+return box ? box.getAttribute('aria-label').replace('แสดงความคิดเห็นในชื่อ', '').trim() : '';
+"""
 HEADER_BUTTONS_JS = r"""
 const vis = e => { const r = e.getBoundingClientRect(); return r.width > 0 && r.height > 0; };
 return [...document.querySelectorAll('[role="button"]')].filter(vis).map(b => {
@@ -97,7 +107,12 @@ return [...document.querySelectorAll('[role="button"]')].filter(vis).map(b => {
 
 
 class Stop(Exception):
-    """Facebook เตือน/บล็อก หรือล็อกอินไม่ได้: หยุดงานทั้งหมดทันที"""
+    """Facebook เตือน/บล็อก หรือล็อกอินไม่ได้: หยุดงานทั้งหมดทันที
+    pause=True (Facebook เตือน): พักทุกงานของบอทต่ออีก WARNING_PAUSE_HOURS ชั่วโมง"""
+
+    def __init__(self, msg, pause=False):
+        super().__init__(msg)
+        self.pause = pause
 
 
 # ---------------- เก็บข้อมูลและ log ----------------
@@ -187,7 +202,23 @@ def check_warning(driver, where):
     if hit:
         shot = os.path.join(LOG_DIR, f"warning_{datetime.datetime.now():%Y%m%d_%H%M%S}.png")
         driver.save_screenshot(shot)
-        raise Stop(f"Facebook ขึ้นเตือน ({hit}) ตอน {where} หยุดทุกอย่างแล้ว ดูภาพ: {shot}")
+        raise Stop(f"Facebook ขึ้นเตือน ({hit}) ตอน {where} หยุดทุกอย่างแล้ว ดูภาพ: {shot}", pause=True)
+
+
+def paused_until():
+    """คืนเวลาที่ยังพักอยู่ (datetime) หรือ None ถ้าไม่ได้พัก"""
+    p = load(PAUSE_FILE, {})
+    try:
+        until = datetime.datetime.fromisoformat(p["until"])
+    except (KeyError, TypeError, ValueError):
+        return None
+    return until if until > datetime.datetime.now() else None
+
+
+def pause(why):
+    until = datetime.datetime.now() + datetime.timedelta(hours=WARNING_PAUSE_HOURS)
+    save(PAUSE_FILE, {"until": until.isoformat(timespec="minutes"), "why": why})
+    log(f"พักบอททั้งหมดถึง {until:%Y-%m-%d %H:%M} (ลบไฟล์ {PAUSE_FILE} ถ้าจะเริ่มก่อนกำหนด)")
 
 
 def membership(driver):
@@ -271,7 +302,7 @@ def post_round(driver, members, posted, dry):
     done = 0
     for m in todo[:MAX_POSTS_PER_DAY]:
         if done:
-            time.sleep(random.uniform(*POST_GAP_SECONDS))
+            time.sleep(random.uniform(*POST_ROUND_GAP_SECONDS))
         name = m.get("name", "")[:40]
         try:
             pressed = post_to_group(driver, m["url"], pick_variant(cell_text(text_cell)), resolve_images(image_cell), dry_run=dry)
@@ -320,6 +351,7 @@ def scan(driver, members, history, recent):
     found = []
     recent_people = {c["author"] for c in recent if c["author"] and c["author"] != ANONYMOUS}
     recent_texts = {c["body"][:60] for c in recent if len(c.get("body") or "") >= 15}
+    me_seen = load(ME_FILE, "")
     for m in members:
         driver.get(m["url"].rstrip("/") + "/?sorting_setting=CHRONOLOGICAL")
         time.sleep(random.uniform(7, 9))
@@ -329,10 +361,14 @@ def scan(driver, members, history, recent):
                 cards.setdefault(c["url"], c)
             driver.execute_script("window.scrollBy(0, 1000);")
             time.sleep(random.uniform(2.5, 4))
+        me = driver.execute_script(MY_NAME_JS) or me_seen
+        if me and me != me_seen:
+            save(ME_FILE, me)
+        me_seen = me
         hits = 0
         for c in cards.values():
-            ok, why = judge(c["text"], c["images"], c["message"])
             author = clean_author(c["author"])
+            ok, why = judge(c["text"], c["images"], c["message"], author=author, me=me)
             body = re.sub(r"\s+", " ", c["message"] or post_body(c["text"]))[:200]
             if ok and post_key(c["url"]) in history:
                 ok, why = False, "เคยคอมเมนต์แล้ว"
@@ -362,6 +398,11 @@ def comment_on(driver, target, text, image, dry):
         return None
     box = boxes[0]
     me = box.get_attribute("aria-label").replace("แสดงความคิดเห็นในชื่อ", "").strip()
+    if me and me != load(ME_FILE, ""):
+        save(ME_FILE, me)
+    if me and target["author"] == me:
+        log(f"  ข้าม: โพสต์ของเราเอง ({target['url']})")
+        return None
     box.click()
     attach_images(driver, image, near=box, wait=8)
     actions = ActionChains(driver).move_to_element(box).click().send_keys(text)
@@ -426,6 +467,10 @@ def main(argv):
         print(__doc__)
         return 2
     os.makedirs(STATE_DIR, exist_ok=True)
+    until = paused_until()
+    if until:
+        log(f"{job}: พักอยู่เพราะ Facebook เตือน ถึง {until:%Y-%m-%d %H:%M} ข้ามรอบนี้")
+        return 0
     if os.path.exists(LOCK_FILE) and time.time() - os.path.getmtime(LOCK_FILE) < 3 * 3600:
         log(f"{job}: มีงานอื่นของบอทกำลังทำอยู่ ข้ามรอบนี้")
         return 0
@@ -437,6 +482,8 @@ def main(argv):
         return 0
     except Stop as e:
         log(f"หยุด: {e}")
+        if e.pause and not dry:
+            pause(str(e))
         return 1
     except Exception as e:
         log(f"ผิดพลาด: {type(e).__name__}: {e}\n{traceback.format_exc(limit=4)}")
