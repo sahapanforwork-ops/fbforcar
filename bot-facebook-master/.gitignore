@@ -40,3 +40,7 @@ poetry.lock
 
 # Ignore JSON files
 *.json
+
+# ประวัติ autopilot ที่ export ด้วย export_history.py (เอาชื่อคน เบอร์ และบัญชีออกแล้ว) ขึ้น git ได้
+!history/*.json
+!history/logs/*.log
